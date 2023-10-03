@@ -35,7 +35,9 @@ class FieldDatasetImage(FieldDataset):
         """
         coordinates = coordinates * 2 - 1
         coordinates = coordinates.unsqueeze(0).unsqueeze(2)
-        sampled_colors = F.grid_sample(self.image, coordinates)  # batch channel d_out 1
+        sampled_colors = F.grid_sample(
+            self.image, coordinates, align_corners=False
+        )  # batch channel d_out 1
         return sampled_colors.squeeze(0).squeeze(-1).permute(1, 0)  # batch d_out
 
     @property
