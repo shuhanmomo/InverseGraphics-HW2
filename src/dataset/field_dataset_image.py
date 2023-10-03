@@ -1,9 +1,11 @@
+import numpy as np
+import torch
+import torch.nn.functional as F
 from jaxtyping import Float
 from omegaconf import DictConfig
-import torch.nn.functional as F
-from torchvision import transforms
-from torch import Tensor
 from PIL import Image
+from torch import Tensor
+
 from .field_dataset import FieldDataset
 
 
@@ -14,7 +16,11 @@ class FieldDatasetImage(FieldDataset):
         super().__init__(cfg)
         self.cfg = cfg
         read_image = Image.open(cfg.path).convert("RGB")
-        self.image = read_image.ToTensor().unsqueeze(0)
+
+        self.image = (
+            torch.tensor(np.array(read_image)).permute(2, 0, 1).unsqueeze(0).float()
+            / 255
+        )  # batch channel h w
 
     def query(
         self,
@@ -28,9 +34,9 @@ class FieldDatasetImage(FieldDataset):
         parameter.
         """
         coordinates = coordinates * 2 - 1
-        coordinates = coordinates.unsqueeze(0).permute(0, 2, 1).unsqueeze(3)
-        sampled_colors = F.grid_sample(self.image, coordinates)
-        return sampled_colors.squeeze(0).squeeze(2).permute(1, 0)
+        coordinates = coordinates.unsqueeze(0).unsqueeze(2)
+        sampled_colors = F.grid_sample(self.image, coordinates)  # batch channel d_out 1
+        return sampled_colors.squeeze(0).squeeze(-1).permute(1, 0)  # batch d_out
 
     @property
     def d_coordinate(self) -> int:
