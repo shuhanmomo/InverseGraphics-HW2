@@ -55,8 +55,9 @@ class FieldMLP(Field):
         coordinates: Float[Tensor, "batch coordinate_dim"],
     ) -> Float[Tensor, "batch output_dim"]:
         """Evaluate the MLP at the specified coordinates."""
-        inputs = coordinates
         if self.positional_encoding:
-            inputs = self.positional_encoding(coordinates)
+            coordinates = self.positional_encoding(coordinates)
             # Reshape or flatten the positional encoding dimensions
-        return self.mlp(inputs)
+        coordinates = coordinates.clone().detach().requires_grad_(True)
+        output = self.mlp(coordinates)
+        return output

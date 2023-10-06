@@ -1,6 +1,10 @@
+import numpy as np
+import torch
 from jaxtyping import Float
 from omegaconf import DictConfig
 from torch import Tensor, nn
+
+from src.components.sine_layer import SineLayer
 
 from .field import Field
 
@@ -22,7 +26,29 @@ class FieldSiren(Field):
         - An output linear layer
         """
         super().__init__(cfg, d_coordinate, d_out)
-        raise NotImplementedError("This is your homework.")
+        layers = []
+        input_dim = d_coordinate
+        hidden_dim = 256
+        hidden_num = 2
+        hidden_omega_0 = 30.0
+
+        # append first layer
+        layers.append(SineLayer(input_dim, hidden_dim, is_first=True))
+
+        # append hidden layers
+        for _ in range(hidden_num):
+            layers.append(SineLayer(hidden_dim, hidden_dim, is_first=False))
+
+        # append output layer
+        output_layer = nn.Linear(hidden_dim, d_out)
+        with torch.no_grad():
+            output_layer.weight.uniform_(
+                -np.sqrt(6 / hidden_dim) / hidden_omega_0,
+                np.sqrt(6 / hidden_dim) / hidden_omega_0,
+            )
+        layers.append(output_layer)
+
+        self.mlp = nn.Sequential(*layers)
 
     def forward(
         self,
@@ -30,4 +56,6 @@ class FieldSiren(Field):
     ) -> Float[Tensor, "batch output_dim"]:
         """Evaluate the MLP at the specified coordinates."""
 
-        raise NotImplementedError("This is your homework.")
+        coordinates = coordinates.clone().detach().requires_grad_(True)
+        output = self.mlp(coordinates)
+        return output
