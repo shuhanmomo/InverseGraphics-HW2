@@ -23,6 +23,7 @@ class FieldGrid(Field):
         assert d_coordinate in (2, 3)
         self.side_length = cfg.side_length
         self.d_coordinate = d_coordinate
+        self.d_out = d_out
 
         # Initializing a learnable tensor for the grid
         if d_coordinate == 2:
@@ -46,3 +47,21 @@ class FieldGrid(Field):
         """
         # normalization
         coordinates = (coordinates / (self.side_length - 1)) * 2 - 1
+        if self.d_coordinate == 2:
+            # Shape: [batchsize, 1, 1, 2]
+            coordinates = coordinates.unsqueeze(1).unsqueeze(2)
+        elif self.d_coordinate == 3:
+            # Shape: [batchsize, 1, 1, 1, 3]
+            coordinates = coordinates.unsqueeze(1).unsqueeze(2).unsqueeze(3)
+
+        # Use grid_sample
+        sampled_values = torch.nn.functional.grid_sample(
+            self.grid,
+            coordinates,
+            mode="bilinear",
+            padding_mode="zeros",
+            align_corners=False,
+        )
+        sampled_values = sampled_values.reshape(coordinates.size(0), self.d_out)
+
+        return sampled_values
