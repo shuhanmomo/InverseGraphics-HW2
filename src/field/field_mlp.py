@@ -35,7 +35,7 @@ class FieldMLP(Field):
             self.positional_encoding = PositionalEncoding(
                 cfg.positional_encoding_octaves
             )
-            input_dim *= cfg.positional_encoding_octaves * 2
+            input_dim = self.positional_encoding.d_out(input_dim)
         else:
             self.positional_encoding = None
 
