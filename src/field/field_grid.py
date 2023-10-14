@@ -1,7 +1,7 @@
 from jaxtyping import Float
 from omegaconf import DictConfig
 from torch import Tensor
-
+import torch
 from .field import Field
 
 
@@ -21,7 +21,20 @@ class FieldGrid(Field):
         """
         super().__init__(cfg, d_coordinate, d_out)
         assert d_coordinate in (2, 3)
-        raise NotImplementedError("This is your homework.")
+        self.side_length = cfg.side_length
+        self.d_coordinate = d_coordinate
+
+        # Initializing a learnable tensor for the grid
+        if d_coordinate == 2:
+            self.grid = torch.nn.Parameter(
+                torch.randn(1, self.side_length, self.side_length, d_out)
+            )
+        elif d_coordinate == 3:
+            self.grid = torch.nn.Parameter(
+                torch.randn(
+                    1, self.side_length, self.side_length, self.side_length, d_out
+                )
+            )
 
     def forward(
         self,
@@ -31,5 +44,5 @@ class FieldGrid(Field):
         Remember that your implementation must support either 2D and 3D queries,
         depending on what d_coordinate was during initialization.
         """
-
-        raise NotImplementedError("This is your homework.")
+        # normalization
+        coordinates = (coordinates / (self.side_length - 1)) * 2 - 1

@@ -1,10 +1,16 @@
+import sys
+from pathlib import Path
+
 from jaxtyping import install_import_hook
 
 # Add runtime type checking to all imports.
+root_directory = str(Path(__file__).parent.parent)
+if root_directory not in sys.path:
+    sys.path.append(root_directory)
+# Add runtime type checking to all imports.
 with install_import_hook(("src",), ("beartype", "beartype")):
     from src.components.positional_encoding import PositionalEncoding
-
-    from .f32 import f32
+    from tests.f32 import f32
 
 
 def test_d_out():
@@ -28,7 +34,14 @@ def test_lowest_frequency():
     for entry in actual:
         for possible in expected:
             if entry.isclose(possible, atol=1e-3):
+                print("positional encoding successful")
                 break
         else:
             # no match found
+            print(actual)
+            print("fail!")
             assert False
+
+
+test_d_out()
+test_lowest_frequency()
