@@ -22,8 +22,8 @@ class FieldHybridGrid(Field):
         each to __init__ and forward!
         """
         super().__init__(cfg, d_coordinate, d_out)
-        self.field_grid = FieldGrid(cfg, d_coordinate, d_out)
-        self.field_mlp = FieldMLP(cfg, d_out, d_out)
+        self.field_grid = FieldGrid(cfg.grid, d_coordinate, d_out)
+        self.field_mlp = FieldMLP(cfg.mlp, d_out, d_out)
 
     def forward(
         self,

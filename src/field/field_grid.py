@@ -1,7 +1,8 @@
+import torch
 from jaxtyping import Float
 from omegaconf import DictConfig
 from torch import Tensor
-import torch
+
 from .field import Field
 
 
