@@ -1,10 +1,10 @@
+import numpy as np
+import torch
 from jaxtyping import Float
 from omegaconf import DictConfig
 from torch import Tensor, nn
 
 from .field.field import Field
-import torch
-import numpy as np
 
 
 class NeRF(nn.Module):
@@ -33,8 +33,17 @@ class NeRF(nn.Module):
            self.compute_alpha_values().
         4. Composite these alpha values together with the evaluated colors from.
         """
-
-        raise NotImplementedError("This is your homework.")
+        num_samples = self.cfg.num_samples
+        sample_pts, boundaries = self.generate_samples(
+            origins, directions, near, far, num_samples
+        )
+        reshaped_sample_pts = sample_pts.reshape(-1, 3)
+        mlp_out = self.field(reshaped_sample_pts).reshape(-1, num_samples, 4)
+        sigma_a = nn.ReLU()(mlp_out[..., 3])  # batch sample 1
+        colors = nn.Sigmoid()(mlp_out[..., :3])  # batch sample 3
+        alphas = self.compute_alpha_values(sigma_a, boundaries)
+        rgb_map = self.alpha_composite(alphas, colors)  # batch 3
+        return rgb_map
 
     def generate_samples(
         self,
@@ -79,8 +88,8 @@ class NeRF(nn.Module):
         boundaries.
         """
         seg_len = boundaries[..., 1:] - boundaries[..., :-1]
-        alpha = 1 - torch.exp(-sigma * seg_len)
-        return alpha
+        alphas = 1 - torch.exp(-sigma * seg_len)
+        return alphas
 
     def alpha_composite(
         self,
