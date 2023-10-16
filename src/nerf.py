@@ -3,6 +3,8 @@ from omegaconf import DictConfig
 from torch import Tensor, nn
 
 from .field.field import Field
+import torch
+import numpy as np
 
 
 class NeRF(nn.Module):
@@ -50,8 +52,23 @@ class NeRF(nn.Module):
         endpoints at the near and far planes). Also return sample locations, which fall
         at the midpoints of the segments.
         """
+        num_rays = origins.shape[0]
+        t_vals = torch.linspace(0.0, 1.0, steps=num_samples + 1)
+        z_vals = (far - near) * t_vals + near
+        z_vals = z_vals.expand([num_rays, num_samples + 1])
+        mid_pts = 0.5 * (z_vals[..., 1:] + z_vals[..., :-1])
+        # stratified sampling
+        np.random.seed(0)
+        t_rand = torch.rand(*mid_pts.shape)
+        upper = z_vals[..., 1:] - mid_pts
+        lower = mid_pts - z_vals[..., :-1]
+        z_vals_rand = mid_pts + upper * t_rand - lower * (1 - t_rand)
+        pts = (
+            origins[..., None, :] + directions[..., None, :] * z_vals_rand[..., :, None]
+        )  # [N_rays, N_samples, 3]
+        boundaries = z_vals
 
-        raise NotImplementedError("This is your homework.")
+        return pts, boundaries
 
     def compute_alpha_values(
         self,
