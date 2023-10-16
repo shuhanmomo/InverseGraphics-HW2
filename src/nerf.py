@@ -78,8 +78,9 @@ class NeRF(nn.Module):
         """Compute alpha values from volumetric densities (values of sigma) and segment
         boundaries.
         """
-
-        raise NotImplementedError("This is your homework.")
+        seg_len = boundaries[..., 1:] - boundaries[..., :-1]
+        alpha = 1 - torch.exp(-sigma * seg_len)
+        return alpha
 
     def alpha_composite(
         self,
@@ -89,5 +90,10 @@ class NeRF(nn.Module):
         """Alpha-composite the supplied alpha values and colors. You may assume that the
         background is black.
         """
-
-        raise NotImplementedError("This is your homework.")
+        T = torch.cumprod(1.0 - alphas + 1e-10, dim=-1)
+        T = torch.cat(
+            [torch.ones_like(T[..., :1], dtype=torch.float32), T[..., :-1]], dim=-1
+        )
+        weights = alphas * T
+        rgb_map = torch.sum(weights.unsqueeze(-1) * colors, dim=-2)
+        return rgb_map
