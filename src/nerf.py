@@ -67,7 +67,7 @@ class NeRF(nn.Module):
         z_vals = z_vals.expand([num_rays, num_samples + 1])
         mid_pts = 0.5 * (z_vals[..., 1:] + z_vals[..., :-1])
         # stratified sampling
-        np.random.seed(0)
+        torch.manual_seed(0)
         t_rand = torch.rand(*mid_pts.shape)
         upper = z_vals[..., 1:] - mid_pts
         lower = mid_pts - z_vals[..., :-1]
