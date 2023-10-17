@@ -34,17 +34,7 @@ class PositionalEncoding(nn.Module):
             )
 
         elif self.mode == "basic":
-            freqs = (
-                2.0 ** torch.arange(0, self.num_octaves).float().to(samples.device)
-                * 2
-                * np.pi
-            )
-            B = (
-                freqs[:, None]
-                .repeat(1, coord_dim)
-                .repeat(coord_dim, 1)
-                .view(-1, coord_dim)
-            )
+            B = torch.eye(coord_dim).repeat(self.num_octaves, 1)
         B = B.to(samples.device)
         x_proj = (2.0 * torch.pi * samples) @ B.T
         embedding = torch.cat([torch.sin(x_proj), torch.cos(x_proj)], axis=-1)
