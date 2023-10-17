@@ -29,13 +29,12 @@ class FieldGrid(Field):
         # Initializing a learnable tensor for the grid
         if d_coordinate == 2:
             self.grid = torch.nn.Parameter(
-                torch.randn(1, d_out, self.side_length, self.side_length)
+                torch.randn(d_out, self.side_length, self.side_length)
             )
         elif d_coordinate == 3:
             self.grid = torch.nn.Parameter(
                 torch.randn(
                     1,
-                    d_out,
                     self.side_length,
                     self.side_length,
                     self.side_length,
@@ -51,18 +50,25 @@ class FieldGrid(Field):
         depending on what d_coordinate was during initialization.
         """
         # normalization
+        batch = coordinates.size(0)
+        print("Min Coordinate:", torch.min(coordinates))
+        print("Max Coordinate:", torch.max(coordinates))
         coordinates = (coordinates / (self.side_length - 1)) * 2 - 1
-        coordinates = coordinates.unsqueeze(0).unsqueeze(2)  # 1 batch 1 d_coordinate
+        print("Min Coordinate after norm:", torch.min(coordinates))
+        print("Max Coordinate after norm:", torch.max(coordinates))
+        if self.d_coordinate == 2:
+            coordinates = coordinates.view(1, 1, batch, 2)
+        else:
+            coordinates = coordinates.view(1, 1, 1, batch, 3)
         # Use grid_sample
         sampled_values = torch.nn.functional.grid_sample(
-            input=self.grid,
+            input=self.grid.unsqueeze(0),
             grid=coordinates,
             mode="bilinear",
-            padding_mode="zeros",
             align_corners=False,
         )
         sampled_values = (
-            sampled_values.squeeze(0).squeeze(-1).permute(1, 0)
-        )  # [batch, d_out]
-
+            sampled_values.transpose(1, -2).transpose(-1, -2).reshape(batch, self.d_out)
+        )
+        # [batch, d_out]
         return sampled_values
