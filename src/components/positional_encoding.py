@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 from jaxtyping import Float
@@ -25,12 +26,26 @@ class PositionalEncoding(nn.Module):
         # from Tancik's paper on Fourier Features
         torch.manual_seed(0)
         coord_dim = samples.shape[-1]
-        mapping_size = 256
-        B = (
-            (torch.randn((self.num_octaves * mapping_size * coord_dim, coord_dim)) * 10)
-            if self.mode == "gaussian"
-            else torch.eye(coord_dim)
-        )
+        if self.mode == "gaussian":
+            mapping_size = 256
+            B = (
+                torch.randn((self.num_octaves * mapping_size * coord_dim, coord_dim))
+                * 10
+            )
+
+        elif self.mode == "basic":
+            freqs = (
+                2.0 ** torch.arange(0, self.num_octaves).float().to(samples.device)
+                * 2
+                * np.pi
+            )
+            B = (
+                freqs[:, None]
+                .repeat(1, coord_dim)
+                .repeat(coord_dim, 1)
+                .view(-1, coord_dim)
+            )
+        B = B.to(samples.device)
         x_proj = (2.0 * torch.pi * samples) @ B.T
         embedding = torch.cat([torch.sin(x_proj), torch.cos(x_proj)], axis=-1)
 

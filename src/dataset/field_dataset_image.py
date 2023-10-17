@@ -33,6 +33,7 @@ class FieldDatasetImage(FieldDataset):
         Pay special attention to grid_sample's expected input range for the grid
         parameter.
         """
+        self.image = self.image.to(coordinates.device)
         coordinates = coordinates * 2 - 1
         coordinates = coordinates.unsqueeze(0).unsqueeze(2)
         sampled_colors = F.grid_sample(
