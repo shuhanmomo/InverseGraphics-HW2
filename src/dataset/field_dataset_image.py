@@ -36,10 +36,15 @@ class FieldDatasetImage(FieldDataset):
         self.image = self.image.to(coordinates.device)
         coordinates = coordinates * 2 - 1
         coordinates = coordinates.unsqueeze(0).unsqueeze(2)
+        print(f"self.image shape is {self.image.shape}")
+        print(f"coordinates shape is {coordinates.shape}")
         sampled_colors = F.grid_sample(
             self.image, coordinates, align_corners=False
         )  # batch channel d_out 1
-        return sampled_colors.squeeze(0).squeeze(-1).permute(1, 0)  # batch d_out
+        print(f"sampled color after grid sample is {sampled_colors}")
+        output = sampled_colors.squeeze(0).squeeze(-1).permute(1, 0)
+        print(f"output after permutation is {output}")
+        return output  # batch d_out
 
     @property
     def d_coordinate(self) -> int:

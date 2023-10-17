@@ -29,12 +29,16 @@ class FieldGrid(Field):
         # Initializing a learnable tensor for the grid
         if d_coordinate == 2:
             self.grid = torch.nn.Parameter(
-                torch.randn(1, self.side_length, self.side_length, d_out)
+                torch.randn(1, self.side_length, self.side_length, d_coordinate)
             )
         elif d_coordinate == 3:
             self.grid = torch.nn.Parameter(
                 torch.randn(
-                    1, self.side_length, self.side_length, self.side_length, d_out
+                    1,
+                    self.side_length,
+                    self.side_length,
+                    self.side_length,
+                    d_coordinate,
                 )
             )
 
@@ -54,11 +58,13 @@ class FieldGrid(Field):
         elif self.d_coordinate == 3:
             # Shape: [batchsize, 1, 1, 1, 3]
             coordinates = coordinates.unsqueeze(1).unsqueeze(2).unsqueeze(3)
-
+        expanded_grid = self.grid.repeat(coordinates.size(0), 1, 1, 1)
+        print(f"expanded grid shape is {expanded_grid.shape}")
+        print(f"input shape is:{coordinates.shape}")
         # Use grid_sample
         sampled_values = torch.nn.functional.grid_sample(
-            self.grid,
-            coordinates,
+            grid=expanded_grid,
+            input=coordinates,
             mode="bilinear",
             padding_mode="zeros",
             align_corners=False,
