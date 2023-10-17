@@ -155,7 +155,7 @@ cython_debug/
 .ruff_cache
 
 # Downloaded data
-/data
+# /data
 /puzzle
 
 # Project outputs
