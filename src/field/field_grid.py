@@ -51,11 +51,7 @@ class FieldGrid(Field):
         """
         # normalization
         batch = coordinates.size(0)
-        print("Min Coordinate:", torch.min(coordinates))
-        print("Max Coordinate:", torch.max(coordinates))
-        coordinates = (coordinates / (self.side_length - 1)) * 2 - 1
-        print("Min Coordinate after norm:", torch.min(coordinates))
-        print("Max Coordinate after norm:", torch.max(coordinates))
+        coordinates = coordinates * 2 - 1
         if self.d_coordinate == 2:
             coordinates = coordinates.view(1, 1, batch, 2)
         else:
