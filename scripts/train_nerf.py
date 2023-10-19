@@ -126,7 +126,8 @@ def train(cfg: DictConfig):
     radius = 0.5 * (dataset.near + dataset.far)
     for i, c2w in enumerate(tqdm(generate_spin(30, 30.0, radius), desc="Rendering")):
         c2w[:3, 3] += 0.5
-        image = render_image(vis_h, vis_w, c2w, dataset.intrinsics[0])
+        with torch.no_grad():
+            image = render_image(vis_h, vis_w, c2w, dataset.intrinsics[0])
         save_image(image, f"{cfg.output_path}/spin/{i:0>6}.png")
 
 

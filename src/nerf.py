@@ -41,7 +41,7 @@ class NeRF(nn.Module):
         mlp_out = self.field(reshaped_sample_pts).reshape(-1, num_samples, 4)
         sigma_a = nn.ReLU()(mlp_out[..., 3])  # batch sample 1
         colors = nn.Sigmoid()(mlp_out[..., :3])  # batch sample 3
-        alphas = self.compute_alpha_values(sigma_a, boundaries)
+        alphas = self.compute_alpha_values(sigma_a, boundaries.to(sigma_a.device))
         rgb_map = self.alpha_composite(alphas, colors)  # batch 3
         return rgb_map
 
@@ -65,15 +65,9 @@ class NeRF(nn.Module):
         t_vals = torch.linspace(0.0, 1.0, steps=num_samples + 1)
         z_vals = (far - near) * t_vals + near
         z_vals = z_vals.expand([num_rays, num_samples + 1])
-        mid_pts = 0.5 * (z_vals[..., 1:] + z_vals[..., :-1])
-        # stratified sampling
-        torch.manual_seed(0)
-        t_rand = torch.rand(*mid_pts.shape)
-        upper = z_vals[..., 1:] - mid_pts
-        lower = mid_pts - z_vals[..., :-1]
-        z_vals_rand = mid_pts + upper * t_rand - lower * (1 - t_rand)
+        mid_pts = (0.5 * (z_vals[..., 1:] + z_vals[..., :-1])).to(origins.device)
         pts = (
-            origins[..., None, :] + directions[..., None, :] * z_vals_rand[..., :, None]
+            origins[..., None, :] + directions[..., None, :] * mid_pts[..., :, None]
         )  # [N_rays, N_samples, 3]
         boundaries = z_vals
 
