@@ -23,13 +23,13 @@ class FieldHybridGrid(Field):
         """
         super().__init__(cfg, d_coordinate, d_out)
         self.field_grid = FieldGrid(cfg.grid, d_coordinate, d_out)
-        self.field_mlp = FieldMLP(cfg.mlp, d_out, d_out)
+        self.field_mlp = FieldMLP(cfg.mlp, d_coordinate, d_out)
 
     def forward(
         self,
         coordinates: Float[Tensor, "batch coordinate_dim"],
     ) -> Float[Tensor, "batch output_dim"]:
         grid_out = self.field_grid(coordinates)
-        mlp_out = self.field_mlp(grid_out)
+        mlp_out = self.field_mlp(coordinates)
 
-        return mlp_out
+        return (grid_out + mlp_out) / 2
