@@ -27,9 +27,9 @@ class FieldGroundPlan(Field):
         """
         super().__init__(cfg, d_coordinate, d_out)
         assert d_coordinate == 3
-        self.field_grid = FieldGrid(cfg.grid, 2, d_out)
+        self.field_grid = FieldGrid(cfg.grid, 2, cfg.d_grid_feature)
         self.positional_encoding = PositionalEncoding(cfg.positional_encoding_octaves)
-        mlp_input_dim = d_out + self.positional_encoding.d_out(1)
+        mlp_input_dim = cfg.d_grid_feature + self.positional_encoding.d_out(1)
         self.field_mlp = FieldMLP(cfg.mlp, mlp_input_dim, d_out)
 
     def forward(
